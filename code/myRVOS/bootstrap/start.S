@@ -19,6 +19,7 @@ _start:
     j start_kernel
 
 park:
+    # sleep hart
     wfi
     j park
 
