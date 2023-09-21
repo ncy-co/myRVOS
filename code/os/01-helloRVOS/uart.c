@@ -88,6 +88,15 @@ void uart_init()
 	 * split the value of 3(0x0003) into two bytes, DLL stores the low byte,
 	 * DLM stores the high byte.
 	 */
+
+	// 设置 UART 通信协议的波特率（发送速率）信息
+	// 若想 UART 通信协议的输出速率为 38.4k， 则需设置配置信息为0x0003
+	// 对照表：pdf：td16550  6页
+	// 配置信息均为16位的数，UART 寄存器为八位，则配置信息需要放在两个UART寄存器中
+	// DLL[UART寄存器] (divisor latch least) 低位，DLM(divisor latch most) 高位
+	// LCR[UART寄存器] ：将lcr寄存器的第七位设置为1，表示使能设置波特率
+	// pdf：td16550  4页
+	// 将波特率设置完成之后，将lcr bit7 置0
 	uint8_t lcr = uart_read_reg(LCR);
 	uart_write_reg(LCR, lcr | (1 << 7));
 	uart_write_reg(DLL, 0x03);
@@ -101,12 +110,16 @@ void uart_init()
 	 * - no break control
 	 * - disabled baud latch
 	 */
+
+	// 设置 UART 通信协议的奇偶校验位信息
+	// LCR第三位表示 奇偶校验(1)或无奇偶校验(0)
 	lcr = 0;
 	uart_write_reg(LCR, lcr | (3 << 0));
 }
 
 int uart_putc(char ch)
 {
+	// 轮询等待，若寄存器未准备好，则一直查询
 	while ((uart_read_reg(LSR) & LSR_TX_IDLE) == 0);
 	return uart_write_reg(THR, ch);
 }
