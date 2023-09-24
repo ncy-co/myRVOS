@@ -2,14 +2,16 @@
  * Author: bye
  * Date: 2023-09-19 19:05:31
  * LastEditors: bye
- * LastEditTime: 2023-09-21 17:22:55
- * FilePath: /study/RVOS/code/myRVOS/06_interrupts/trap.c
+ * LastEditTime: 2023-09-22 23:59:05
+ * FilePath: /study/RVOS/code/myRVOS/08_preemptive/trap.c
  * Description: 
  */
 
 #include "os.h"
 
 extern void trap_vector(void);
+extern void timer_handler(void);
+extern void schedule(void);
 
 // 设置trap处理程序的入口地址
 // trap处理程序负责保存上下文，恢复上下文等
@@ -47,9 +49,13 @@ reg_t trap_handler(reg_t epc, reg_t cause) {
         switch (trap_code) {
         case 3:
             uart_puts("Software interrupt\n");
+            int id = _r_mhartid();
+            *(uint32_t *)CLINT_MSIP(id) = 0;
+            schedule();
             break;
         case 7:
             uart_puts("Timer interrupt\n");
+            timer_handler();
             break;
         case 11:
             uart_puts("External interrupt\n");
@@ -65,7 +71,7 @@ reg_t trap_handler(reg_t epc, reg_t cause) {
         printf("Sync exceptions! code = %d\n", trap_code);
         uint32_t i = 0xfffffff;
         while (i--) {}
-        // return_epc -= 4;
+        return_epc -= 4;
     }
 
     // 返回mepc

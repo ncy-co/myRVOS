@@ -10,10 +10,17 @@ CC = ${CROSS_COMPILE}gcc
 OBJCOPY = ${CROSS_COMPILE}objcopy
 OBJDUMP = ${CROSS_COMPILE}objdump
 
+SYSCALL = y
+
+ifeq (${SYSCALL}, y)
+CFLAGS += -D CONFIG_SYSCALL
+endif
+
 SRCS_ASM = \
 	start.S \
 	mem.S \
 	entry.S \
+	syscallS.S \
 
 SRCS_C = \
 	kernel.c \
@@ -24,6 +31,9 @@ SRCS_C = \
 	user.c \
 	trap.c \
 	plic.c \
+	timer.c \
+	lock.c \
+	syscall.c \
 
 OBJS = $(SRCS_ASM:.S=.o)
 OBJS += $(SRCS_C:.c=.o)

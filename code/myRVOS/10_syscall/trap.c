@@ -2,14 +2,17 @@
  * Author: bye
  * Date: 2023-09-19 19:05:31
  * LastEditors: bye
- * LastEditTime: 2023-09-21 17:22:55
- * FilePath: /study/RVOS/code/myRVOS/06_interrupts/trap.c
+ * LastEditTime: 2023-09-24 10:25:19
+ * FilePath: /study/RVOS/code/myRVOS/10_syscall/trap.c
  * Description: 
  */
 
 #include "os.h"
 
 extern void trap_vector(void);
+extern void timer_handler(void);
+extern void schedule(void);
+extern void do_syscall(context *cxt);
 
 // 设置trap处理程序的入口地址
 // trap处理程序负责保存上下文，恢复上下文等
@@ -39,7 +42,7 @@ void external_interrupt_handler() {
 }
 
 // 具体的trap处理方法
-reg_t trap_handler(reg_t epc, reg_t cause) {
+reg_t trap_handler(reg_t epc, reg_t cause, context *cxt) {
     reg_t return_epc = epc;
     reg_t trap_code = cause & (0xfff);
     if (cause & (0x80000000)) {
@@ -47,9 +50,13 @@ reg_t trap_handler(reg_t epc, reg_t cause) {
         switch (trap_code) {
         case 3:
             uart_puts("Software interrupt\n");
+            int id = _r_mhartid();
+            *(uint32_t *)CLINT_MSIP(id) = 0;
+            schedule();
             break;
         case 7:
             uart_puts("Timer interrupt\n");
+            timer_handler();
             break;
         case 11:
             uart_puts("External interrupt\n");
@@ -63,9 +70,20 @@ reg_t trap_handler(reg_t epc, reg_t cause) {
     }else {
         // 此时trap为exception
         printf("Sync exceptions! code = %d\n", trap_code);
+        switch (trap_code) {
+            // 从user模式下执行的ecall
+        case 8:
+            uart_puts("System call from U-mode!\n");
+            do_syscall(cxt);
+            return_epc += 4;
+            break;
+        
+        default:
+            break;
+        }
+        
         uint32_t i = 0xfffffff;
         while (i--) {}
-        // return_epc -= 4;
     }
 
     // 返回mepc

@@ -2,8 +2,8 @@
  * Author: bye
  * Date: 2023-09-13 09:00:03
  * LastEditors: bye
- * LastEditTime: 2023-09-21 16:50:41
- * FilePath: /study/RVOS/code/myRVOS/06_interrupts/os.h
+ * LastEditTime: 2023-09-23 20:44:17
+ * FilePath: /study/RVOS/code/myRVOS/09_lock/os.h
  * Description: 
  */
 #ifndef __OS_H__
@@ -65,6 +65,8 @@ typedef struct context {
     reg_t t4;
     reg_t t5;
     reg_t t6;
+    // trap 中 mret所用的pc
+    reg_t epc;
 } context;
 extern void sched_init();
 extern int task_create(void (*address_task)(void));
@@ -75,5 +77,31 @@ extern void task_delay(volatile int count);
 extern void plic_init(void);
 extern int plic_claim(void);
 extern void plic_complete(int number_interrupt);
+
+extern int spin_lock(void);
+extern int spin_unlock(void);
+
+// timer 软件定时器
+typedef struct Timer {
+    // 定时器超时处理函数
+    void (* func)(void *arg);
+    void *arg;
+    // 超时变量，_tick到达这个变量的值时超时
+    uint32_t timeout_tick; 
+}Timer;
+
+extern Timer* timer_create(
+    void (*func)(void *arg),
+    void *arg,
+    uint32_t timeout_tick
+);
+
+extern void timer_delete(Timer *timer);
+
+
+typedef struct userdata {
+    int num;
+    char *str;
+}userdata;
 
 #endif

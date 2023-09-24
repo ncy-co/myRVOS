@@ -2,8 +2,8 @@
  * Author: bye
  * Date: 2023-09-21 14:02:54
  * LastEditors: bye
- * LastEditTime: 2023-09-21 17:20:18
- * FilePath: /study/RVOS/code/myRVOS/06_interrupts/plic.c
+ * LastEditTime: 2023-09-23 15:15:51
+ * FilePath: /study/RVOS/code/myRVOS/08_preemptive/plic.c
  * Description: 中断相关函数
  */
 #include "os.h"
@@ -25,7 +25,7 @@ void plic_init() {
     _w_mie(_r_mie() | (1 << 11));
 
     // set mie of mstatus
-    _w_mstatus(_r_mstatus() | (1 << 3));
+    // _w_mstatus(_r_mstatus() | (1 << 3));
 
 }
 

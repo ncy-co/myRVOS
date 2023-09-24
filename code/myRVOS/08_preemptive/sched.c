@@ -2,8 +2,8 @@
  * Author: bye
  * Date: 2023-09-19 17:10:22
  * LastEditors: bye
- * LastEditTime: 2023-09-21 17:20:17
- * FilePath: /study/RVOS/code/myRVOS/06_interrupts/sched.c
+ * LastEditTime: 2023-09-23 15:17:58
+ * FilePath: /study/RVOS/code/myRVOS/08_preemptive/sched.c
  * Description: 
  */
 #include "os.h"
@@ -28,23 +28,28 @@ static void _set_mscratch(uint32_t x) {
         :
         :"r"(x)
     );
+    
 }
 
 void sched_init() {
     // 初始化当前任务的上下文寄存器, 以及mscratch寄存器
     // 设置 当前上下文为0号任务上下文
-    _set_mscratch(0);
+    _w_mscratch(0);
+    _w_mie(_r_mie() | MIE_MSIE);
 }
 
 // 执行下一个任务
 void schedule() {
+        
     if (_num_tasks <= 0) {
         printf("Error: The available tasks are 0\n");
     }
+    //-------------------------------------------bug
     _cur_task = (_cur_task + 1) % _num_tasks;
     context *next = &(ctx_tasks[_cur_task]);
     // 进行上下文切换
     switch_to(next);
+    // ------------------------------------------bug
 }
 
 // 成功返回-1，失败返回0
@@ -52,14 +57,15 @@ int task_create(void (*address_task)(void)) {
     if (_num_tasks < MAX_TASKS) {
         
         ctx_tasks[_num_tasks].sp = (uint32_t)&task_stack[_num_tasks];
-        ctx_tasks[_num_tasks].ra = (uint32_t)address_task;
+        ctx_tasks[_num_tasks].epc = (uint32_t)address_task;
         _num_tasks++;
         return 0;
     }else return -1;
 }
 
 void task_yield() {
-    schedule();
+    int id = _r_mhartid();
+    *(uint32_t *)CLINT_MSIP(id) = 1;
 }
 
 void task_delay(volatile int count) {

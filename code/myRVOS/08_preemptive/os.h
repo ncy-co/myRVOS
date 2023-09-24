@@ -2,8 +2,8 @@
  * Author: bye
  * Date: 2023-09-13 09:00:03
  * LastEditors: bye
- * LastEditTime: 2023-09-21 16:50:41
- * FilePath: /study/RVOS/code/myRVOS/06_interrupts/os.h
+ * LastEditTime: 2023-09-22 20:22:00
+ * FilePath: /study/RVOS/code/myRVOS/08_preemptive/os.h
  * Description: 
  */
 #ifndef __OS_H__
@@ -65,6 +65,8 @@ typedef struct context {
     reg_t t4;
     reg_t t5;
     reg_t t6;
+    // trap 中 mret所用的pc
+    reg_t epc;
 } context;
 extern void sched_init();
 extern int task_create(void (*address_task)(void));

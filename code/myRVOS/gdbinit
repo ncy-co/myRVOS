@@ -1,12 +1,12 @@
 display/z $a0
 display/z $ra
 display/z $t6
-display/z $pc
+display/z $mepc
 
 set disassemble-next-line on
-b _start
-b kernel.c:20
-b sched.c:48
-b sched.c:56
+b start.S:33
+b kernel.c:32
+b user.c:29
+b user.c:67
 target remote : 1234
 c
